@@ -152,7 +152,7 @@ HeirLock leverages ICP's unique capabilities:
 - `InheritanceEngine.mo` - Automatic execution
 - `Scheduler.mo` - Periodic inheritance checks
 - `BitcoinApi.mo` - Bitcoin network integration
-- `EcdsaApi.mo` - Cryptographic signing
+- `EcdsaApi.mo` - Cryptographic signing transactions
 
 ---
 
