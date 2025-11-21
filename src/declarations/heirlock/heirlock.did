@@ -1,0 +1,144 @@
+type Utxo = 
+ record {
+   height: nat32;
+   outpoint: OutPoint;
+   value: Satoshi;
+ };
+type UserStatus = 
+ record {
+   bitcoin_balance: opt Satoshi;
+   days_since_activity: nat;
+   days_until_inheritance: opt nat;
+   is_inactive: bool;
+   profile: UserProfile;
+ };
+type UserProfile = 
+ record {
+   account_status: AccountStatus;
+   bitcoin_address: opt BitcoinAddress;
+   created_at: Timestamp;
+   derivation_path: vec vec nat8;
+   inactivity_period_days: nat;
+   last_activity: Timestamp;
+   last_bitcoin_activity: opt Timestamp;
+   last_login: Timestamp;
+   "principal": principal;
+ };
+type Timestamp = nat64;
+type Satoshi = nat64;
+type Result_2 = 
+ variant {
+   err: text;
+   ok: HeirId;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: InheritanceResult;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type Page = vec nat8;
+type OutPoint = 
+ record {
+   txid: blob;
+   vout: nat32;
+ };
+type Network = 
+ variant {
+   mainnet;
+   regtest;
+   testnet;
+ };
+type InheritanceResult = 
+ record {
+   execution_timestamp: Timestamp;
+   fees_paid: Satoshi;
+   heir_count: nat;
+   total_distributed: Satoshi;
+   transaction_ids: vec text;
+ };
+type InactivityStatus = 
+ record {
+   can_trigger_inheritance: bool;
+   is_active: bool;
+   seconds_since_activity: nat;
+   seconds_until_inheritance: opt nat;
+ };
+type HeirLock = 
+ service {
+   /// Add a new heir with allocation percentage
+   add_heir: (request: AddHeirRequest) -> (Result_2);
+   /// Check if user is inactive and trigger inheritance if conditions are met
+   check_and_trigger_inheritance: () -> (Result_1);
+   /// Generate a unique Bitcoin address for the caller
+   generate_bitcoin_address: () -> (BitcoinAddress);
+   /// Get balance for any Bitcoin address
+   get_address_balance: (address: text) -> (Satoshi);
+   /// Get UTXOs (transaction history) for any Bitcoin address
+   /// This shows all unspent transaction outputs for the address
+   /// Note: This only shows UNSPENT transactions, not full history
+   get_address_utxos: (address: text) -> (GetUtxosResponse);
+   /// Get the Bitcoin balance for the caller's address
+   get_balance: () -> (Satoshi);
+   /// Get the Bitcoin address for the caller
+   get_bitcoin_address: () -> (opt BitcoinAddress);
+   /// Get all heirs for the caller
+   get_heirs: () -> (vec Heir);
+   /// Get inactivity status for the caller
+   get_inactivity_status: () -> (opt InactivityStatus);
+   /// Get user profile
+   get_profile: () -> (opt UserProfile);
+   /// Get total allocation percentage for the caller
+   get_total_allocation: () -> (nat);
+   /// Get user status including inactivity information
+   get_user_status: () -> (opt UserStatus);
+   /// Heartbeat endpoint - explicit activity signal
+   /// Also triggers a check of all users for inheritance
+   heartbeat: () -> ();
+   /// Login endpoint - creates user if new, updates activity if existing
+   login: () -> (UserProfile);
+   /// Remove a heir by ID
+   remove_heir: (heir_id: HeirId) -> (Result);
+   /// Set the inactivity period in seconds (flexible for testing and production)
+   /// Minimum: 30 seconds, Maximum: 31,536,000 seconds (1 year)
+   set_inactivity_period: (seconds: nat) -> (Result);
+   /// Manual trigger for inheritance check (for testing/debugging)
+   /// This simulates what the timer does automatically
+   /// Note: This does NOT update user activity (unlike heartbeat)
+   trigger_inheritance_check: () -> ();
+ };
+type HeirId = nat;
+type Heir = 
+ record {
+   added_at: Timestamp;
+   allocation: Allocation;
+   bitcoin_address: BitcoinAddress;
+   id: HeirId;
+ };
+type GetUtxosResponse = 
+ record {
+   next_page: opt Page;
+   tip_block_hash: BlockHash;
+   tip_height: nat32;
+   utxos: vec Utxo;
+ };
+type BlockHash = vec nat8;
+type BitcoinAddress = text;
+type Allocation = variant {percentage: nat;};
+type AddHeirRequest = 
+ record {
+   allocation_percentage: nat;
+   bitcoin_address: BitcoinAddress;
+ };
+type AccountStatus = 
+ variant {
+   active;
+   frozen;
+   inactive;
+   inherited;
+ };
+service : (network: Network) -> HeirLock
