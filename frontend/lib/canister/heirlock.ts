@@ -20,6 +20,7 @@ export interface HeirlockCanister {
   trigger_inheritance_check: () => Promise<void>;
   get_address_balance: (address: string) => Promise<bigint>;
   get_address_utxos: (address: string) => Promise<any>;
+  send_bitcoin: (recipientAddress: string, amount: bigint) => Promise<Result<string, string>>;
 }
 
 // Type definitions (simplified - should match Motoko types)
@@ -31,7 +32,7 @@ export interface UserProfile {
   created_at: bigint;
   last_activity: bigint;
   last_bitcoin_activity: bigint | null;
-  account_status: { active: null } | { inherited: null };
+  account_status: { active: null } | { inactive: null } | { inherited: null } | { frozen: null };
 }
 
 export interface UserStatus {

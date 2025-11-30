@@ -30,11 +30,11 @@ export interface HeirLock {
   /**
    * / Add a new heir with allocation percentage
    */
-  'add_heir' : ActorMethod<[AddHeirRequest], Result_2>,
+  'add_heir' : ActorMethod<[AddHeirRequest], Result_3>,
   /**
    * / Check if user is inactive and trigger inheritance if conditions are met
    */
-  'check_and_trigger_inheritance' : ActorMethod<[], Result_1>,
+  'check_and_trigger_inheritance' : ActorMethod<[], Result_2>,
   /**
    * / Generate a unique Bitcoin address for the caller
    */
@@ -91,6 +91,11 @@ export interface HeirLock {
    */
   'remove_heir' : ActorMethod<[HeirId], Result>,
   /**
+   * / Send Bitcoin to a recipient address
+   * / Validates account status, balance, and executes the transaction
+   */
+  'send_bitcoin' : ActorMethod<[BitcoinAddress, Satoshi], Result_1>,
+  /**
    * / Set the inactivity period in seconds (flexible for testing and production)
    * / Minimum: 30 seconds, Maximum: 31,536,000 seconds (1 year)
    */
@@ -122,9 +127,11 @@ export interface OutPoint { 'txid' : Uint8Array | number[], 'vout' : number }
 export type Page = Uint8Array | number[];
 export type Result = { 'ok' : null } |
   { 'err' : string };
-export type Result_1 = { 'ok' : InheritanceResult } |
+export type Result_1 = { 'ok' : string } |
   { 'err' : string };
-export type Result_2 = { 'ok' : HeirId } |
+export type Result_2 = { 'ok' : InheritanceResult } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : HeirId } |
   { 'err' : string };
 export type Satoshi = bigint;
 export type Timestamp = bigint;

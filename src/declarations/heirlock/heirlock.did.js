@@ -10,7 +10,7 @@ export const idlFactory = ({ IDL }) => {
     'allocation_percentage' : IDL.Nat,
   });
   const HeirId = IDL.Nat;
-  const Result_2 = IDL.Variant({ 'ok' : HeirId, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : HeirId, 'err' : IDL.Text });
   const Timestamp = IDL.Nat64;
   const Satoshi = IDL.Nat64;
   const InheritanceResult = IDL.Record({
@@ -20,7 +20,7 @@ export const idlFactory = ({ IDL }) => {
     'total_distributed' : Satoshi,
     'fees_paid' : Satoshi,
   });
-  const Result_1 = IDL.Variant({ 'ok' : InheritanceResult, 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : InheritanceResult, 'err' : IDL.Text });
   const Page = IDL.Vec(IDL.Nat8);
   const BlockHash = IDL.Vec(IDL.Nat8);
   const OutPoint = IDL.Record({
@@ -76,9 +76,10 @@ export const idlFactory = ({ IDL }) => {
     'profile' : UserProfile,
   });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text });
   const HeirLock = IDL.Service({
-    'add_heir' : IDL.Func([AddHeirRequest], [Result_2], []),
-    'check_and_trigger_inheritance' : IDL.Func([], [Result_1], []),
+    'add_heir' : IDL.Func([AddHeirRequest], [Result_3], []),
+    'check_and_trigger_inheritance' : IDL.Func([], [Result_2], []),
     'generate_bitcoin_address' : IDL.Func([], [BitcoinAddress], []),
     'get_address_balance' : IDL.Func([IDL.Text], [Satoshi], []),
     'get_address_utxos' : IDL.Func([IDL.Text], [GetUtxosResponse], []),
@@ -92,6 +93,7 @@ export const idlFactory = ({ IDL }) => {
     'heartbeat' : IDL.Func([], [], []),
     'login' : IDL.Func([], [UserProfile], []),
     'remove_heir' : IDL.Func([HeirId], [Result], []),
+    'send_bitcoin' : IDL.Func([BitcoinAddress, Satoshi], [Result_1], []),
     'set_inactivity_period' : IDL.Func([IDL.Nat], [Result], []),
     'trigger_inheritance_check' : IDL.Func([], [], []),
   });

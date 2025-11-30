@@ -17,7 +17,9 @@ export const idlFactory = (idl: { IDL: typeof IDL }) => {
       last_bitcoin_activity: IDLType.Opt(IDLType.Nat64),
       account_status: IDLType.Variant({
         active: IDLType.Null,
+        inactive: IDLType.Null,
         inherited: IDLType.Null,
+        frozen: IDLType.Null,
       }),
     })], []),
     get_profile: IDLType.Func([], [IDLType.Opt(IDLType.Record({
@@ -30,7 +32,9 @@ export const idlFactory = (idl: { IDL: typeof IDL }) => {
       last_bitcoin_activity: IDLType.Opt(IDLType.Nat64),
       account_status: IDLType.Variant({
         active: IDLType.Null,
+        inactive: IDLType.Null,
         inherited: IDLType.Null,
+        frozen: IDLType.Null,
       }),
     }))], []),
     get_user_status: IDLType.Func([], [IDLType.Opt(IDLType.Record({
@@ -109,5 +113,15 @@ export const idlFactory = (idl: { IDL: typeof IDL }) => {
       })),
       next_page: IDLType.Opt(IDLType.Vec(IDLType.Nat8)),
     })], []),
+    send_bitcoin: IDLType.Func(
+      [IDLType.Text, IDLType.Nat64], // [recipient_address, amount]
+      [
+        IDLType.Variant({
+          ok: IDLType.Text, // transaction ID
+          err: IDLType.Text, // error message
+        }),
+      ],
+      []
+    ),
   });
 };

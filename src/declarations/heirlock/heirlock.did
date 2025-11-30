@@ -26,15 +26,20 @@ type UserProfile =
  };
 type Timestamp = nat64;
 type Satoshi = nat64;
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok: HeirId;
  };
-type Result_1 = 
+type Result_2 = 
  variant {
    err: text;
    ok: InheritanceResult;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: text;
  };
 type Result = 
  variant {
@@ -71,9 +76,9 @@ type InactivityStatus =
 type HeirLock = 
  service {
    /// Add a new heir with allocation percentage
-   add_heir: (request: AddHeirRequest) -> (Result_2);
+   add_heir: (request: AddHeirRequest) -> (Result_3);
    /// Check if user is inactive and trigger inheritance if conditions are met
-   check_and_trigger_inheritance: () -> (Result_1);
+   check_and_trigger_inheritance: () -> (Result_2);
    /// Generate a unique Bitcoin address for the caller
    generate_bitcoin_address: () -> (BitcoinAddress);
    /// Get balance for any Bitcoin address
@@ -103,6 +108,10 @@ type HeirLock =
    login: () -> (UserProfile);
    /// Remove a heir by ID
    remove_heir: (heir_id: HeirId) -> (Result);
+   /// Send Bitcoin to a recipient address
+   /// Validates account status, balance, and executes the transaction
+   send_bitcoin: (recipient_address: BitcoinAddress, amount: Satoshi) ->
+    (Result_1);
    /// Set the inactivity period in seconds (flexible for testing and production)
    /// Minimum: 30 seconds, Maximum: 31,536,000 seconds (1 year)
    set_inactivity_period: (seconds: nat) -> (Result);

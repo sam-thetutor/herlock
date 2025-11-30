@@ -1,23 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useProfile, useHeartbeat } from '@/lib/hooks/useHeirlock';
-import { formatDate } from '@/lib/utils/format';
-import { Activity, Loader2 } from 'lucide-react';
+import { formatRelativeTime } from '@/lib/utils/format';
+import { Activity, Loader2, CheckCircle2, Bitcoin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ActivityTimer() {
   const { data: profile } = useProfile();
   const { mutate: heartbeat, isPending: isHeartbeating } = useHeartbeat();
   const [lastHeartbeat, setLastHeartbeat] = useState<Date | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [ripple, setRipple] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Update current time every second for relative time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleHeartbeat = () => {
+    // Trigger ripple effect
+    setRipple(true);
+    setTimeout(() => setRipple(false), 600);
+
     heartbeat(undefined, {
       onSuccess: () => {
-        setLastHeartbeat(new Date());
+        const now = new Date();
+        setLastHeartbeat(now);
+        setShowSuccess(true);
         toast.success('Activity updated successfully');
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => setShowSuccess(false), 3000);
       },
       onError: (err) => {
         toast.error(err instanceof Error ? err.message : 'Failed to update activity');
@@ -29,53 +48,98 @@ export function ActivityTimer() {
     ? new Date(Number(profile.last_activity))
     : null;
 
+  const relativeTime = lastActivity ? formatRelativeTime(lastActivity) : 'Never';
+  const isJustNow = lastActivity && (Date.now() - lastActivity.getTime()) < 60000;
+
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-orange-50 to-white pb-4">
         <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5" />
-          Activity Timer
+          <div className="relative">
+            <Bitcoin className="h-5 w-5 text-[#F7931A] animate-pulse" />
+            <span className="absolute top-0 right-0 w-2 h-2 bg-green-500 rounded-full animate-ping" />
+          </div>
+          Proof of Life
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="text-sm">
-            <span className="text-gray-600">Last activity: </span>
-            <span className="font-medium">
-              {lastActivity && profile ? formatDate(profile.last_activity) : 'Never'}
-            </span>
+      <CardContent className="pt-6">
+        <div className="flex flex-col items-center space-y-6">
+          {/* Circular Button with Pulse Animation */}
+          <div className="relative flex items-center justify-center h-32">
+            {/* Pulse Rings */}
+            {!isHeartbeating && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div 
+                  className="absolute w-24 h-24 rounded-full border-2 border-orange-300 animate-ping"
+                  style={{ animationDuration: '2s' }}
+                />
+                <div 
+                  className="absolute w-28 h-28 rounded-full border-2 border-orange-200 animate-ping"
+                  style={{ animationDuration: '2s', animationDelay: '0.5s' }}
+                />
+              </div>
+            )}
+
+            {/* Ripple Effect */}
+            {ripple && (
+              <div 
+                className="absolute w-24 h-24 rounded-full bg-orange-400 opacity-0 animate-ripple"
+                style={{ animation: 'ripple 0.6s ease-out' }}
+              />
+            )}
+
+            {/* Main Circular Button */}
+            <button
+              onClick={handleHeartbeat}
+              disabled={isHeartbeating}
+              className={`
+                relative w-24 h-24 rounded-full 
+                bg-gradient-to-br from-[#F7931A] via-[#F7931A] to-[#E8821A]
+                shadow-lg hover:shadow-xl 
+                transition-all duration-300 
+                hover:scale-105 active:scale-95 
+                disabled:opacity-70 disabled:cursor-not-allowed
+                flex items-center justify-center 
+                text-white
+                ${!isHeartbeating ? 'animate-pulse-slow' : ''}
+              `}
+              style={{
+                boxShadow: '0 4px 15px rgba(247, 147, 26, 0.3)',
+              }}
+            >
+              {isHeartbeating ? (
+                <Loader2 className="h-10 w-10 animate-spin" />
+              ) : (
+                <Bitcoin className="h-10 w-10" />
+              )}
+            </button>
           </div>
-          {lastHeartbeat && (
-            <div className="text-sm text-green-600">
-              ✓ Heartbeat sent at {lastHeartbeat.toLocaleTimeString()}
+
+          {/* Status Section */}
+          <div className="w-full space-y-3 text-center">
+            {/* Last Activity Display */}
+            <div className="space-y-1">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Last Activity</p>
+              <p className={`text-2xl font-bold ${isJustNow ? 'text-green-600' : 'text-gray-700'}`}>
+                {relativeTime}
+              </p>
             </div>
-          )}
+
+            {/* Success Message */}
+            {showSuccess && lastHeartbeat && (
+              <div className="flex items-center justify-center gap-2 text-sm text-green-600 animate-fade-in">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Heartbeat sent at {lastHeartbeat.toLocaleTimeString()}</span>
+              </div>
+            )}
+
+            {/* Helper Text */}
+            <p className="text-xs text-gray-500 pt-2">
+              Keep your account active by sending regular heartbeats
+            </p>
+          </div>
         </div>
-
-        <Button
-          onClick={handleHeartbeat}
-          disabled={isHeartbeating}
-          className="w-full"
-          variant="outline"
-        >
-          {isHeartbeating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending heartbeat...
-            </>
-          ) : (
-            <>
-              <Activity className="mr-2 h-4 w-4" />
-              Send Heartbeat
-            </>
-          )}
-        </Button>
-
-        <p className="text-xs text-gray-600">
-          Click to update your activity timestamp and reset the inactivity timer.
-        </p>
       </CardContent>
     </Card>
   );
 }
-

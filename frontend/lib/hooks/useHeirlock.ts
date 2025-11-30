@@ -247,27 +247,6 @@ export function useSetInactivityPeriod() {
 }
 
 /**
- * Hook to reset account status (TEST ONLY - for development)
- */
-export function useResetAccountStatus() {
-  const { data: actor } = useHeirlockActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Not authenticated');
-      return actor.reset_account_status();
-    },
-    onSuccess: () => {
-      // Invalidate and refetch profile and status
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['inactivity-status'] });
-      queryClient.invalidateQueries({ queryKey: ['user-status'] });
-    },
-  });
-}
-
-/**
  * Hook to get Bitcoin balance for any address
  */
 export function useHeirBalance(address: string) {
@@ -282,5 +261,27 @@ export function useHeirBalance(address: string) {
     },
     enabled: !!actor && !!address,
     refetchInterval: 30000, // Refetch every 30 seconds
+  });
+}
+
+/**
+ * Hook to send Bitcoin to a recipient address
+ */
+export function useSendBitcoin() {
+  const { data: actor } = useHeirlockActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ recipientAddress, amount }: { recipientAddress: string; amount: bigint }) => {
+      if (!actor) throw new Error('Not authenticated');
+      return actor.send_bitcoin(recipientAddress, amount);
+    },
+    onSuccess: () => {
+      // Invalidate balance, profile, and inactivity status queries
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['inactivity-status'] });
+      queryClient.invalidateQueries({ queryKey: ['user-status'] });
+    },
   });
 }

@@ -14,6 +14,7 @@ import InheritanceEngine "InheritanceEngine";
 import BitcoinApi "BitcoinApi";
 import P2pkh "P2pkh";
 import Scheduler "Scheduler";
+import Utils "Utils";
 
 persistent actor class HeirLock(network : Types.Network) {
     type UserProfile = Types.UserProfile;
@@ -312,6 +313,88 @@ persistent actor class HeirLock(network : Types.Network) {
             case (null) {
                 0 : Satoshi; // No user means no balance
             };
+        };
+    };
+
+    /// Send Bitcoin to a recipient address
+    /// Validates account status, balance, and executes the transaction
+    public shared(msg) func send_bitcoin(recipient_address : BitcoinAddress, amount : Satoshi) : async Result<Text, Text> {
+        let caller_principal = msg.caller;
+        
+        // Validate user exists
+        let user = switch (UserManager.get_user(users, caller_principal)) {
+            case (?u) u;
+            case (null) {
+                return #err("User not found. Please login first.");
+            };
+        };
+
+        // Check account status - only allow active or inactive accounts
+        switch (user.account_status) {
+            case (#inherited) {
+                return #err("Cannot send Bitcoin: Account has been inherited.");
+            };
+            case (#frozen) {
+                return #err("Cannot send Bitcoin: Account is frozen.");
+            };
+            case (#active) {};
+            case (#inactive) {};
+        };
+
+        // Validate user has Bitcoin address
+        let user_address = switch (user.bitcoin_address) {
+            case (?addr) addr;
+            case (null) {
+                return #err("No Bitcoin address configured. Please generate an address first.");
+            };
+        };
+
+        // Validate user has derivation path
+        if (user.derivation_path.size() == 0) {
+            return #err("No derivation path found. Please generate a Bitcoin address first.");
+        };
+
+        // Validate amount > 0
+        if (amount == 0) {
+            return #err("Amount must be greater than 0.");
+        };
+
+        // Check balance (including estimated fees)
+        // Use conservative fee estimate: 10,000 satoshis (0.0001 BTC)
+        let ESTIMATED_FEE : Satoshi = 10000;
+        let current_balance = await BitcoinApi.get_balance(NETWORK, user_address);
+        let total_required = amount + ESTIMATED_FEE;
+
+        if (current_balance < total_required) {
+            return #err("Insufficient balance. Required: " # debug_show(total_required) # " satoshis (including fees), Available: " # debug_show(current_balance) # " satoshis.");
+        };
+
+        // Send transaction using P2pkh.send
+        try {
+            let txid_bytes = await P2pkh.send(
+                ecdsa_canister_actor,
+                NETWORK,
+                user.derivation_path,
+                KEY_NAME,
+                recipient_address,
+                amount
+            );
+
+            // Convert transaction ID bytes to hex string
+            let txid_hex = Utils.bytesToText(txid_bytes);
+
+            // Update last activity timestamp (sending BTC is activity)
+            ignore UserManager.update_last_activity(users, caller_principal);
+
+            // Update last Bitcoin activity timestamp
+            ignore UserManager.update_last_bitcoin_activity(users, caller_principal);
+
+            Debug.print("Bitcoin sent successfully. Transaction ID: " # txid_hex);
+            #ok(txid_hex);
+        } catch (err) {
+            let error_msg = Error.message(err);
+            Debug.print("Error sending Bitcoin: " # error_msg);
+            #err("Failed to send Bitcoin: " # error_msg);
         };
     };
 

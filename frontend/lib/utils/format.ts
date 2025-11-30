@@ -92,3 +92,55 @@ export function formatPrincipal(principal: string | null | undefined): string {
   return `${principal.slice(0, 5)}...${principal.slice(-5)}`;
 }
 
+/**
+ * Convert BTC string to satoshis (bigint)
+ */
+export function btcToSatoshi(btc: string): bigint {
+  const btcNum = parseFloat(btc);
+  if (isNaN(btcNum) || btcNum < 0) return BigInt(0);
+  return BigInt(Math.floor(btcNum * 100_000_000));
+}
+
+/**
+ * Validate Bitcoin address format
+ * Supports P2PKH (starts with 1 or m/n), P2SH (starts with 3 or 2), and Bech32 (starts with bc1 or bcrt1)
+ */
+export function isValidBitcoinAddress(address: string): boolean {
+  if (!address || address.length < 26) return false;
+  
+  // P2PKH addresses (legacy): starts with 1 (mainnet) or m/n (testnet/regtest)
+  const p2pkhRegex = /^[1mn][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
+  
+  // P2SH addresses: starts with 3 (mainnet) or 2 (testnet/regtest)
+  const p2shRegex = /^[23][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
+  
+  // Bech32 addresses: starts with bc1 (mainnet) or bcrt1 (regtest) or tb1 (testnet)
+  const bech32Regex = /^(bc1|bcrt1|tb1)[a-z0-9]{39,59}$/i;
+  
+  return p2pkhRegex.test(address) || p2shRegex.test(address) || bech32Regex.test(address);
+}
+
+/**
+ * Format relative time (e.g., "2m ago", "Just now")
+ */
+export function formatRelativeTime(timestamp: Date | null): string {
+  if (!timestamp) return 'Never';
+  
+  const now = new Date();
+  const diff = now.getTime() - timestamp.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  if (weeks < 4) return `${weeks}w ago`;
+  
+  // For older dates, show full date
+  return formatDate(timestamp.getTime());
+}
+

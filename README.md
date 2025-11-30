@@ -455,3 +455,59 @@ trigger_inheritance_check() : async ()
 **Last Updated**: November 2025
 **Version**: 1.0.0
 **Status**: MVP Complete, Testing Phase
+
+
+
+
+HeirLock is a decentralized Bitcoin inheritance platform built on the Internet Computer Protocol (ICP) that solves the critical problem of lost Bitcoin assets when holders pass away or become inactive. The platform enables automatic, trustless distribution of Bitcoin to designated heirs after a configurable period of inactivity.
+
+**Development Process:**
+
+The project was built using a full-stack approach with Motoko for the backend smart contracts and Next.js/React for the frontend. The development process involved:
+
+1. **Backend Architecture (Motoko):**
+   - Implemented core modules: UserManager, HeirManager, ActivityTracker, InheritanceEngine, and Scheduler
+   - Integrated with ICP's Bitcoin API for direct Bitcoin network interaction
+   - Utilized Threshold ECDSA (tECDSA) for decentralized key management and transaction signing
+   - Built automated scheduler that checks for inactive users every 60 seconds
+   - Implemented P2PKH transaction construction for Bitcoin transfers
+
+2. **Frontend Development (Next.js/React):**
+   - Created intuitive dashboard with real-time countdown timer
+   - Implemented heir management interface with Bitcoin balance tracking
+   - Built activity monitoring system with heartbeat mechanism
+   - Integrated Internet Identity for secure authentication
+   - Used TanStack Query for efficient data fetching and caching
+
+3. **Bitcoin Integration:**
+   - Leveraged ICP's native Bitcoin integration capabilities
+   - Implemented UTXO management and balance queries
+   - Built transaction construction and signing using threshold signatures
+   - Tested extensively on Bitcoin regtest network
+
+**Key Achievements:**
+
+✅ **Technical Innovation:**
+- First fully automated, non-custodial Bitcoin inheritance solution on ICP
+- Seamless integration of Bitcoin network with Internet Computer smart contracts
+- Trustless execution without requiring intermediaries or manual intervention
+
+✅ **User Experience:**
+- Simple 5-minute setup process
+- Real-time monitoring dashboard with live countdown timer
+- No technical knowledge required for heirs to receive Bitcoin
+- Flexible configuration (multiple heirs, custom allocations, configurable inactivity periods)
+
+✅ **Security & Decentralization:**
+- 100% non-custodial - users maintain full control of their Bitcoin
+- Distributed key management through threshold ECDSA
+- Automated execution via immutable smart contracts
+- No single point of failure
+
+✅ **Production-Ready Features:**
+- Complete MVP with all core functionality
+- Comprehensive error handling and validation
+- Real-time balance tracking for all addresses
+- Activity monitoring with configurable periods (30 seconds to 1 year for testing/production)
+
+The platform addresses a real-world problem affecting billions of dollars in lost Bitcoin, providing a practical solution that combines the security of Bitcoin with the automation capabilities of Internet Computer smart contracts.
